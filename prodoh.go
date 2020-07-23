@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -30,13 +31,26 @@ func (i *flagStringList) Set(value string) error {
 }
 
 var (
+	version   = flag.Bool("version", false, "Print version")
+	help      = flag.Bool("help", false, "Show command usage")
 	timeout   = flag.Duration("timeout", 10, "Timeout in seconds for the request to the DoH upstream server")
 	address   = flag.String("address", ":5354", "Address to listen to (UDP)")
 	upstreams flagStringList
+	usage     = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\nExample:\n")
+		fmt.Fprintf(os.Stderr, `%s -address 127.0.0.1:5353 \
+		-upstream https://cloudflare-dns.com/dns-query \
+		-upstream https://dns.google.com/resolve \
+		-upstream https://dns9.quad9.net:5053/dns-query \
+		-timeout 2`, os.Args[0])
+		fmt.Fprintf(os.Stderr, "\n")
+	}
 )
 
 func init() {
-	flag.Var(&upstreams, "upstream", "List of upstream DoH servers")
+	flag.Var(&upstreams, "upstream", "List of upstream DoH servers (required)")
 }
 
 // Question is dns query question
@@ -203,9 +217,13 @@ func handleDnsRequest(w dns.ResponseWriter, req *dns.Msg) {
 
 func main() {
 	flag.Parse()
-
-	if len(upstreams) == 0 {
-		log.Fatalf("-upstream is required")
+	if *version {
+		fmt.Printf("%s version 0.9.1 %s %s/%s\n", os.Args[0], runtime.Version(), runtime.GOOS, runtime.GOARCH)
+		return
+	}
+	if len(upstreams) == 0 || *help {
+		usage()
+		return
 	}
 
 	server := &dns.Server{Addr: *address, Net: "udp"}
