@@ -3,7 +3,7 @@
 ## Background
  ```prodoh``` is a DNS to DNS-over-HTTP Proxy. This programs listens to incoming DNS queries on a specified UDP ports, converts the query to a DNS-over-HTTP query and forwards it to an upstream servers, then converts back to a DNS answer.
 
- ```prodoh``` functions like ```cloudflared``` with the ```dns-proxy``` 
+ ```prodoh``` functions like ```cloudflared``` when used with the ```dns-proxy``` option.
 
 ## Usage
 
